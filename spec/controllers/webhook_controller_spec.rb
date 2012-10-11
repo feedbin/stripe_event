@@ -46,4 +46,33 @@ describe StripeEvent::WebhookController do
       }.to raise_error(StripeEvent::InvalidEventTypeError)
     end
   end
+
+  context "failed http basic authentication" do
+    before do
+      StripeEvent.event_retriever = Proc.new { |params| params }
+      StripeEvent.authenticate_with_http_basic = Proc.new do |username, password|
+        username == 'foo' && password == 'bar'
+      end
+    end
+
+    it "denies access" do
+      post :event, @base_params.merge(:id => '1')
+      response.code.should == '401'
+    end
+  end
+
+  context "successful http basic authentication" do
+    before do
+      StripeEvent.event_retriever = Proc.new { |params| params }
+      StripeEvent.authenticate_with_http_basic = Proc.new do |username, password|
+        username == 'Jim' && password == 'Dandy!'
+      end
+    end
+
+    it "is successful" do
+      request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials('Jim', 'Dandy!')
+      post :event, @base_params.merge(:id => '1')
+      response.should be_success
+    end
+  end
 end

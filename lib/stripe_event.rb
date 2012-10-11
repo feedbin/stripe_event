@@ -7,6 +7,9 @@ module StripeEvent
   mattr_accessor :event_retriever
   self.event_retriever = Proc.new { |params| Stripe::Event.retrieve(params[:id]) }
 
+  mattr_accessor :authenticate_with_http_basic
+  self.authenticate_with_http_basic = nil
+
   class << self
     alias_method :setup, :instance_eval
   end

@@ -23,10 +23,12 @@ RSpec.configure do |config|
 
   config.before do
     @_event_retriever = StripeEvent.event_retriever
+    @_authenticate_with_http_basic = StripeEvent.authenticate_with_http_basic
     clear_subscribers_for_list(StripeEvent::TYPE_LIST)
   end
 
   config.after do
     StripeEvent.event_retriever = @_event_retriever
+    StripeEvent.authenticate_with_http_basic = @_authenticate_with_http_basic
   end
 end
