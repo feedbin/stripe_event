@@ -57,7 +57,7 @@ describe StripeEvent::WebhookController do
 
     it "denies access" do
       post :event, @base_params.merge(:id => '1')
-      response.code.should == '401'
+      expect(response.code).to eq '401'
     end
   end
 
@@ -72,7 +72,7 @@ describe StripeEvent::WebhookController do
     it "is successful" do
       request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials('Jim', 'Dandy!')
       post :event, @base_params.merge(:id => '1')
-      response.should be_success
+      expect(response).to be_success
     end
   end
 end
