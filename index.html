@@ -95,11 +95,23 @@
 <p>This button sends an example event to your webhook urls, including an <code>id</code> of <code>evt_00000000000000</code>. To confirm that Stripe sent the webhook, stripe_event attempts to retrieve the event details from Stripe using the given <code>id</code>. In this case the event does not exist and stripe_event responds with <code>401 Unauthorized</code>. Instead of using the 'Test Webhooks' button, trigger webhooks by using the Stripe Dashboard to create test payments, customers, etc.</p>
       </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/integrallis">integrallis</a></p>
+        <p>This project is maintained by <a href="https://github.com/invisiblefunnel">Danny Whalen</a></p>
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
-    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-37521414-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
   </body>
 </html>
