@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>stripe_event by integrallis</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>stripe_event</h1>
+        <p>Stripe webhook integration for Rails applications.</p>
+
+        <p class="view"><a href="https://github.com/integrallis/stripe_event">View the Project on GitHub <small>integrallis/stripe_event</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/integrallis/stripe_event/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/integrallis/stripe_event/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/integrallis/stripe_event">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>stripe_event</h2>
+
+<p><a href="http://travis-ci.org/integrallis/stripe_event"><img src="https://secure.travis-ci.org/integrallis/stripe_event.png?branch=master" alt="Build Status"></a></p>
+
+<p>stripe_event is built on the <a href="http://api.rubyonrails.org/classes/ActiveSupport/Notifications.html">ActiveSupport::Notifications API</a>. Incoming webhook requests are authenticated by retrieving the <a href="https://stripe.com/docs/api?lang=ruby#event_object">event object</a> from Stripe<a href="https://answers.stripe.com/questions/what-is-the-recommended-way-to-authenticate-a-webhook-callback">[1]</a>. Define subscriber blocks to handle one, many, or all event types.</p>
+
+<h2>Install</h2>
+
+<div class="highlight"><pre><span class="c1"># Gemfile</span>
+<span class="n">gem</span> <span class="s1">'stripe_event'</span>
+</pre></div>
+
+<div class="highlight"><pre><span class="c1"># config/routes.rb</span>
+<span class="n">mount</span> <span class="no">StripeEvent</span><span class="o">::</span><span class="no">Engine</span> <span class="o">=&gt;</span> <span class="s1">'/my-chosen-path'</span> <span class="c1"># provide a custom path</span>
+</pre></div>
+
+<h2>Usage</h2>
+
+<div class="highlight"><pre><span class="c1"># config/initializers/stripe.rb</span>
+<span class="no">Stripe</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">'STRIPE_API_KEY'</span><span class="o">]</span> <span class="c1"># Set your api key</span>
+
+<span class="no">StripeEvent</span><span class="o">.</span><span class="n">setup</span> <span class="k">do</span>
+  <span class="n">subscribe</span> <span class="s1">'charge.failed'</span> <span class="k">do</span> <span class="o">|</span><span class="n">event</span><span class="o">|</span>
+    <span class="c1"># Define subscriber behavior based on the event object</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">class</span> <span class="c1">#=&gt; Stripe::Event</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">type</span>  <span class="c1">#=&gt; "charge.failed"</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">data</span>  <span class="c1">#=&gt; { ... }</span>
+  <span class="k">end</span>
+
+  <span class="n">subscribe</span> <span class="s1">'customer.created'</span><span class="p">,</span> <span class="s1">'customer.updated'</span> <span class="k">do</span> <span class="o">|</span><span class="n">event</span><span class="o">|</span>
+    <span class="c1"># Handle multiple event types</span>
+  <span class="k">end</span>
+
+  <span class="n">subscribe</span> <span class="k">do</span> <span class="o">|</span><span class="n">event</span><span class="o">|</span>
+    <span class="c1"># Handle all event types - logging, etc.</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+
+<h2>Configuration</h2>
+
+<p>If you have built an application that has multiple Stripe accounts--say, each of your customers has their own--you may want to define your own way of retrieving events from Stripe (e.g. perhaps you want to use the <a href="https://stripe.com/docs/apps/getting-started#webhooks">user_id parameter</a> from the top level to detect the customer for the event, then grab their specific API key). You can do this:</p>
+
+<div class="highlight"><pre><span class="no">StripeEvent</span><span class="o">.</span><span class="n">event_retriever</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="k">do</span> <span class="o">|</span><span class="n">params</span><span class="o">|</span> 
+  <span class="n">secret_key</span> <span class="o">=</span> <span class="no">Account</span><span class="o">.</span><span class="n">find_by_stripe_user_id</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:user_id</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">secret_key</span>
+  <span class="no">Stripe</span><span class="o">::</span><span class="no">Event</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">,</span> <span class="n">secret_key</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+
+<p>During development it may be useful to skip retrieving the event from Stripe, and deal with the params hash directly. Just remember that the data has not been authenticated.</p>
+
+<div class="highlight"><pre><span class="no">StripeEvent</span><span class="o">.</span><span class="n">event_retriever</span> <span class="o">=</span> <span class="no">Proc</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="o">|</span><span class="n">params</span><span class="o">|</span> <span class="n">params</span> <span class="p">}</span>
+</pre></div>
+
+<h3>Register webhook url with Stripe</h3>
+
+<p><img src="https://raw.github.com/integrallis/stripe_event/master/screenshots/dashboard-webhook.png" alt="Setup webhook url" title="webhook setup"></p>
+
+<h3>Examples</h3>
+
+<p>The <a href="https://github.com/RailsApps">RailsApps</a> project by Daniel Kehoe has released an <a href="https://github.com/RailsApps/rails-stripe-membership-saas">example Rails 3.2 app</a> with recurring billing using Stripe. The application uses stripe_event to handle <code>customer.subscription.deleted</code> events.</p>
+
+<h3>Note: 'Test Webhooks' Button on Stripe Dashboard</h3>
+
+<p>This button sends an example event to your webhook urls, including an <code>id</code> of <code>evt_00000000000000</code>. To confirm that Stripe sent the webhook, stripe_event attempts to retrieve the event details from Stripe using the given <code>id</code>. In this case the event does not exist and stripe_event responds with <code>401 Unauthorized</code>. Instead of using the 'Test Webhooks' button, trigger webhooks by using the Stripe Dashboard to create test payments, customers, etc.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/integrallis">integrallis</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
