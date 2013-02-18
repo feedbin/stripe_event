@@ -12,11 +12,12 @@ describe StripeEvent::WebhookController do
     expect(response).to be_success
   end
 
-  it "denies access with invalid event data" do
+  it "fails with invalid event data" do
     stub_event('evt_invalid_id', 404)
 
-    event_post :id => 'evt_invalid_id'
-    expect(response.code).to eq '401'
+    expect {
+      event_post :id => 'evt_invalid_id'
+    }.to raise_error Stripe::InvalidRequestError
   end
 
   it "succeeds with a custom event retriever" do
