@@ -12,8 +12,7 @@ ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each {|f| require f }
 
 RSpec.configure do |config|
-  config.include(FixtureHelper)
-  config.include(ActiveSupportHelper)
+  config.include FixtureHelper
 
   config.order = 'random'
 
@@ -23,10 +22,12 @@ RSpec.configure do |config|
 
   config.before do
     @_event_retriever = StripeEvent.event_retriever
-    clear_subscribers_for_list(StripeEvent::TYPE_LIST)
+    @_notifier = StripeEvent.backend.notifier
+    StripeEvent.backend.notifier = ActiveSupport::Notifications::Fanout.new
   end
 
   config.after do
     StripeEvent.event_retriever = @_event_retriever
+    StripeEvent.backend.notifier = @_notifier
   end
 end
